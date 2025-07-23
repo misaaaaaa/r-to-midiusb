@@ -1,0 +1,59 @@
+#include <Arduino.h>
+#include "MIDIUSB.h"
+
+int inputPin = 2;          // input pin for the potentiometer
+unsigned long tiempoOn = 0;
+unsigned long tiempoOff = 0;
+unsigned long tiempo = 0; // variable to store the time of the pulse
+
+int valorEntrada = 0;        // value read from the pot
+
+int notaMidi = 0;
+int notaMidiMapeada = 0;
+
+float frecuencia = 0.0;
+
+
+void setup() {
+
+  Serial.begin(9600);
+  pinMode(17, OUTPUT);
+  pinMode(inputPin, INPUT); // set the input pin for the potentiometer
+
+}
+
+void noteOn(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOn = {0x09, (uint8_t)(0x90 | channel), pitch, velocity};
+  MidiUSB.sendMIDI(noteOn);
+}
+
+void noteOff(byte channel, byte pitch, byte velocity) {
+  midiEventPacket_t noteOff = {0x08, (uint8_t)(0x80 | channel), pitch, velocity};
+  MidiUSB.sendMIDI(noteOff);
+}
+
+
+void loop() {
+  valorEntrada = digitalRead(inputPin);
+
+  tiempoOn = pulseIn(inputPin, HIGH);
+  tiempoOff = pulseIn(inputPin, LOW);
+  tiempo = tiempoOn + tiempoOff;
+  frecuencia = 1000000.0 / tiempo;
+
+  notaMidiMapeada = map(frecuencia, 0, 20000, 0, 127); // Map frequency to MIDI note range
+  notaMidi = constrain(frecuencia, 40, 72); // Ensure the note is within the range
+  noteOn(0, notaMidi, 100); // Play the mapped note
+
+  Serial.print("Frecuencia: ");
+  Serial.print(frecuencia);
+  Serial.print(" - Nota MIDI: ");
+  Serial.println(notaMidi);
+
+  MidiUSB.flush();
+  delay(500);
+  noteOff(0, notaMidi, 0);
+  MidiUSB.flush();
+  delay(100);
+}
+
