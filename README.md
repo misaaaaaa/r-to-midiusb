@@ -15,7 +15,7 @@ Máquina para medir resistencia de elementos orgánicos (cuerpo humano, líquido
  Incluir la librería [MIDIUSB](https://github.com/arduino-libraries/MIDIUSB)
 
 
-```
+```cpp
 #include <Arduino.h>
 #include "MIDIUSB.h"
 
